@@ -1,1 +1,40 @@
 /* You can add global styles to this file, and also import other style files */
+* {
+    font-family: Roboto, Helvetica, sans-serif;
+  }
+
+* h2 {
+    color: #FFFFFF;
+    font-weight: 100;
+    font-size: 32px;
+    text-align: center;
+    padding: 10px;
+    font-stretch: ultra-expanded;
+  }
+
+* p {
+    font-weight: 100;
+    font-size: 18px;
+    text-align: center;
+    padding: 0px 10px;
+    margin: 8px 0px;
+  }
+
+* .page-title {
+    border-radius: 10px;
+    background: #04838F;
+    margin: 0 auto;
+    width: fit-content;
+  }  
+
+* .flex-container {
+    display: flex;
+    gap: 50px;
+    justify-content: center;
+}
+
+* .flex-child {
+    border-radius: 10px;
+    border: 2px solid #04838F;
+    background: #FFFFFF;
+  }  
