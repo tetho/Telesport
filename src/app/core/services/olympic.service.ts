@@ -1,7 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import { Participation } from '../models/Participation';
+import { Country } from '../models/Olympic';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -27,5 +30,19 @@ export class OlympicService {
 
   getOlympics() {
     return this.olympics$.asObservable();
+  }
+
+  getCountries(): Observable<Country[]> {
+    return this.http.get<Country[]>(this.olympicUrl);
+  }
+
+  getNumberOfCountries(): Observable<number> {
+    return this.getCountries().pipe(
+      map(countries => countries.length)
+    );
+  }
+
+  getParicipations(): Observable<Participation[]> {
+    return this.http.get<Participation[]>(this.olympicUrl);
   }
 }
