@@ -1,14 +1,30 @@
-
-<div class="page-title">
+<div class="page-container">
     <h2>Medals per Country</h2>
-</div>
-<div class="flex-container">
-    <div class="flex-child">
-        <p>Number of JOs</p>
-        <p><strong>{{ (olympics$ | async)?.length }}</strong></p>
+    <div class="flex-container">
+        <div class="text-container">
+            <p>Number of JOs</p>
+            <p><strong>{{ (olympics$ | async)?.length }}</strong></p>
+        </div>
+        <div class="text-container">
+            <p>Number of countries</p>
+            <p><strong>{{ numberOfCountries }}</strong></p>
+        </div>
     </div>
-    <div class="flex-child">
-        <p>Number of countries</p>
-        <p><strong>{{ numberOfCountries }}</strong></p>
+    <div class="chart-container">
+        <ngx-charts-pie-chart
+            [view]="view"
+            [results]="medalsByCountry"
+            [legend]="showLegend"
+            [labels]="showLabels"
+            [animations]="animations"
+            [scheme]="colorScheme">
+            <ng-template #tooltipTemplate class="tooltip-container" let-model="model">
+                <p class="tooltip-text">{{ model.name }}</p>
+                <p class="tooltip-text">
+                    <img src="assets/images/medal.png" alt="Medal" />
+                    {{ model.value }}
+                </p>
+              </ng-template>
+        </ngx-charts-pie-chart>
     </div>
 </div>

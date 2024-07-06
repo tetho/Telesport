@@ -42,7 +42,18 @@ export class OlympicService {
     );
   }
 
-  getParicipations(): Observable<Participation[]> {
+  getParticipations(): Observable<Participation[]> {
     return this.http.get<Participation[]>(this.olympicUrl);
+  }
+
+  getMedalsByCountry(): Observable<any[]> {
+    return this.getCountries().pipe(
+      map(countries => {
+        return countries.map(country => ({
+          name: country.country,
+          value: country.participations.reduce((total, participation) => total += participation.medalsCount, 0)
+        }));
+      })
+    );
   }
 }
