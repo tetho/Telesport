@@ -1,0 +1,34 @@
+<div class="page-container">
+    <h2>{{ country.country }}</h2>
+    <div class="flex-container">
+        <div class="text-container">
+            <p>Number of entries</p>
+            <p><strong>{{ numberOfEntries }}</strong></p>
+        </div>
+        <div class="text-container">
+            <p>Total number medals</p>
+            <p><strong>{{ numberOfMedals }}</strong></p>
+        </div>
+        <div class="text-container">
+            <p>Total number of athletes</p>
+            <p><strong>{{ numberOfAthletes }}</strong></p>
+        </div>
+    </div>
+    <div class="chart-container">
+        <ngx-charts-line-chart
+            [view]="view"
+            [results]="medalsByParticipation"
+            [scheme]="colorScheme"
+            [xAxis]="showXAxis"
+            [yAxis]="showYAxis"
+            [legend]="showLegend"
+            [showXAxisLabel]="showXAxisLabel"
+            [showYAxisLabel]="showYAxisLabel"
+            [xAxisLabel]="xAxisLabel"
+            [yAxisLabel]="yAxisLabel"
+            [tooltipDisabled]="tooltipDisabled"
+            [yScaleMin]="yScaleMin"
+            [yScaleMax]="yScaleMax">
+        </ngx-charts-line-chart>
+    </div>
+</div>

@@ -1,10 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { Participation } from '../models/Participation';
+import { catchError, filter, map, tap } from 'rxjs/operators';
 import { Country } from '../models/Olympic';
-import { map } from 'rxjs/operators';
+import { Participation } from '../models/Participation';
 
 @Injectable({
   providedIn: 'root',
@@ -38,22 +37,51 @@ export class OlympicService {
 
   getNumberOfCountries(): Observable<number> {
     return this.getCountries().pipe(
-      map(countries => countries.length)
+      map(x => x.length)
     );
-  }
-
-  getParticipations(): Observable<Participation[]> {
-    return this.http.get<Participation[]>(this.olympicUrl);
   }
 
   getMedalsByCountry(): Observable<any[]> {
     return this.getCountries().pipe(
       map(countries => {
-        return countries.map(country => ({
-          name: country.country,
-          value: country.participations.reduce((total, participation) => total += participation.medalsCount, 0)
+        return countries.map(x => ({
+          name: x.country,
+          value: x.participations.reduce((total, participation) => total += participation.medalsCount, 0)
         }));
       })
     );
   }
+
+  getCountryById(countryId: number): Observable<Country> {
+    return this.getCountries().pipe(
+      map(countries => countries.find(x => x.id === countryId)),
+      filter(country => !!country)
+    ) as Observable<Country>;
+  }
+
+  getTotalNumberOfMedalsByCountry(countryId: number): Observable<number> {
+    return this.getCountries().pipe(
+      map(countries => {
+        const country = countries.find(x => x.id === countryId);
+        if (country) {
+          return country.participations.reduce((total, participation) => total + participation.medalsCount, 0);
+        } else {
+          return 0;
+        }
+      })
+    )
+  }
+
+   getTotalNumberOfAthletesByCountry(countryId: number): Observable<number> {
+    return this.getCountries().pipe(
+      map(countries => {
+        const country = countries.find(x => x.id === countryId);
+        if (country) {
+          return country.participations.reduce((total, participation) => total + participation.athleteCount, 0);
+        } else {
+          return 0;
+        }
+      })
+    )
+   }
 }
