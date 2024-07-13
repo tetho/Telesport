@@ -46,7 +46,8 @@ export class OlympicService {
       map(countries => {
         return countries.map(x => ({
           name: x.country,
-          value: x.participations.reduce((total, participation) => total += participation.medalsCount, 0)
+          value: x.participations.reduce((total, participation) => total += participation.medalsCount, 0),
+          id: x.id
         }));
       })
     );

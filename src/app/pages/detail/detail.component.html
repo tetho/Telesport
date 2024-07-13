@@ -17,7 +17,7 @@
     <div class="chart-container">
         <ngx-charts-line-chart
             [view]="view"
-            [results]="medalsByParticipation"
+            [results]="medalsByParticipationChartData"
             [scheme]="colorScheme"
             [xAxis]="showXAxis"
             [yAxis]="showYAxis"
@@ -31,4 +31,5 @@
             [yScaleMax]="yScaleMax">
         </ngx-charts-line-chart>
     </div>
+    <button (click)="onReturnToHomePage()">Retour</button>
 </div>

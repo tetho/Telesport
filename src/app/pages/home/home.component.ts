@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Color, ScaleType } from '@swimlane/ngx-charts';
 import { Observable, of } from 'rxjs';
 import { Country } from 'src/app/core/models/Olympic';
@@ -13,7 +14,7 @@ export class HomeComponent implements OnInit {
   public olympics$: Observable<any> = of(null);
   countries: Country[] = [];
   numberOfCountries: number = 0;
-  medalsByCountry: any[] = [];
+  medalsByCountryChartData: any[] = [];
 
   view!: [number, number]; 
   showLegend: boolean = false;
@@ -26,7 +27,10 @@ export class HomeComponent implements OnInit {
     group: ScaleType.Ordinal
   };
   
-  constructor(private olympicService: OlympicService) {}
+  constructor(
+    private olympicService: OlympicService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.olympics$ = this.olympicService.getOlympics();
@@ -36,8 +40,15 @@ export class HomeComponent implements OnInit {
     });
 
     this.olympicService.getMedalsByCountry().subscribe((data) => {
-      this.medalsByCountry = data;
+      this.medalsByCountryChartData = data;
     });
     
+  }
+
+  onSelect(event: any): void {
+    const selectedCountry = this.medalsByCountryChartData.find(data => data.name === event.name);
+    if (selectedCountry) {
+      this.router.navigate(['/detail', selectedCountry.id]);
+    }
   }
 }

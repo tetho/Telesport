@@ -13,11 +13,12 @@
     <div class="chart-container">
         <ngx-charts-pie-chart
             [view]="view"
-            [results]="medalsByCountry"
+            [results]="medalsByCountryChartData"
             [legend]="showLegend"
             [labels]="showLabels"
             [animations]="animations"
-            [scheme]="colorScheme">
+            [scheme]="colorScheme"
+            (select)="onSelect($event)">
             <ng-template #tooltipTemplate class="tooltip-container" let-model="model">
                 <p class="tooltip-text">{{ model.name }}</p>
                 <p class="tooltip-text">

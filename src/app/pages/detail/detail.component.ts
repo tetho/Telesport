@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Color, ScaleType } from '@swimlane/ngx-charts';
 import { Observable, of } from 'rxjs';
 import { Country } from 'src/app/core/models/Olympic';
@@ -14,11 +15,10 @@ export class DetailComponent implements OnInit {
   public olympics$: Observable<any> = of(null);
 
   country!: Country;
-  countryId: number = 2;
   numberOfEntries: number = 0;
   numberOfMedals: number = 0;
   numberOfAthletes: number = 0;
-  medalsByParticipation: any[] = [];
+  medalsByParticipationChartData: any[] = [];
 
   view!: [number, number]; 
   showLegend: boolean = false;
@@ -27,8 +27,8 @@ export class DetailComponent implements OnInit {
   showYAxis: boolean = true;
   showXAxisLabel: boolean = true;
   showYAxisLabel: boolean = false;
-  xAxisLabel: string = "";
-  yAxisLabel: string = "Dates";
+  xAxisLabel: string = "Dates";
+  yAxisLabel: string = "";
   animations: boolean = true;
   tooltipDisabled: boolean = true;
   yScaleMin: number = 0;
@@ -40,11 +40,24 @@ export class DetailComponent implements OnInit {
     group: ScaleType.Ordinal
   };
 
-  constructor(private olympicService: OlympicService) {}
+  constructor(
+    private olympicService: OlympicService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    
-    this.olympicService.getCountryById(this.countryId).subscribe(data => {
+
+    this.route.paramMap.subscribe(params => {
+      const id = +params.get('id')!;
+      this.getCountry(id)
+      this.getTotalNumberOfMedalsByCountry(id);
+      this.getTotalNumberOfAthletesByCountry(id);
+    });
+  }
+
+  getCountry(id: number): any {
+    this.olympicService.getCountryById(id).subscribe(data => {
       this.country = data;
 
       this.numberOfEntries = data.participations.length;
@@ -52,7 +65,7 @@ export class DetailComponent implements OnInit {
       const medalsCount = data.participations.map(x => x.medalsCount);
       this.yScaleMin = Math.min(...medalsCount);
       this.yScaleMax = Math.max(...medalsCount);
-      this.medalsByParticipation = [
+      this.medalsByParticipationChartData = [
         {
           "name": data.country,
           "series": data.participations.map(participation => ({
@@ -62,13 +75,21 @@ export class DetailComponent implements OnInit {
         }
       ]
     })
+  }
 
-    this.olympicService.getTotalNumberOfMedalsByCountry(this.countryId).subscribe((data) => {
+  getTotalNumberOfMedalsByCountry(id: number): any {
+    this.olympicService.getTotalNumberOfMedalsByCountry(id).subscribe((data) => {
       this.numberOfMedals = data;
     })
+  }
 
-    this.olympicService.getTotalNumberOfAthletesByCountry(this.countryId).subscribe((data: number) => {
+  getTotalNumberOfAthletesByCountry(id: number): any {
+    this.olympicService.getTotalNumberOfAthletesByCountry(id).subscribe((data: number) => {
       this.numberOfAthletes = data;
     })
+  }
+
+  onReturnToHomePage(): void {
+    this.router.navigate(['/']);
   }
 }
