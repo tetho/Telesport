@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Color, ScaleType } from '@swimlane/ngx-charts';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subscription } from 'rxjs';
 import { Country } from 'src/app/core/models/Olympic';
 import { Participation } from 'src/app/core/models/Participation';
 import { OlympicService } from 'src/app/core/services/olympic.service';
@@ -11,7 +11,7 @@ import { OlympicService } from 'src/app/core/services/olympic.service';
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.scss'
 })
-export class DetailComponent implements OnInit {
+export class DetailComponent implements OnInit, OnDestroy {
   public olympics$: Observable<any> = of(null);
 
   country!: Country;
@@ -19,6 +19,8 @@ export class DetailComponent implements OnInit {
   numberOfMedals: number = 0;
   numberOfAthletes: number = 0;
   medalsByParticipationChartData: any[] = [];
+  private subscriptions: Subscription = new Subscription();
+  errorMessage: string = '';
 
   view!: [number, number]; 
   showLegend: boolean = false;
@@ -50,19 +52,30 @@ export class DetailComponent implements OnInit {
 
     this.route.paramMap.subscribe(params => {
       const id = +params.get('id')!;
-      this.getCountry(id)
-      this.getTotalNumberOfMedalsByCountry(id);
-      this.getTotalNumberOfAthletesByCountry(id);
+
+      this.subscriptions.add(this.getCountry(id));
+      
+      this.subscriptions.add(this.getTotalNumberOfMedalsByCountry(id));
+      
+      this.subscriptions.add(this.getTotalNumberOfAthletesByCountry(id));
     });
   }
 
-  getCountry(id: number): any {
-    this.olympicService.getCountryById(id).subscribe(data => {
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  /**
+   * Gets the details of a country
+   * @param id 
+   */
+  getCountry(id: number): Subscription  {
+    return this.olympicService.getCountryById(id).subscribe(data => {
       this.country = data;
 
       this.numberOfEntries = data.participations.length;
 
-      const medalsCount = data.participations.map(x => x.medalsCount);
+      const medalsCount = data.participations.map(participation => participation.medalsCount);
       this.yScaleMin = Math.min(...medalsCount);
       this.yScaleMax = Math.max(...medalsCount);
       this.medalsByParticipationChartData = [
@@ -74,21 +87,43 @@ export class DetailComponent implements OnInit {
           }))
         }
       ]
-    })
+    },
+    (error) => {
+      this.errorMessage = 'Error fetching country data: ' + error.message;
+      this.router.navigate(['/not-found']);
+    }
+    )
   }
 
-  getTotalNumberOfMedalsByCountry(id: number): any {
-    this.olympicService.getTotalNumberOfMedalsByCountry(id).subscribe((data) => {
+  /**
+   * Gets the total number of medals by country
+   * @param id 
+   */
+  getTotalNumberOfMedalsByCountry(id: number): Subscription  {
+    return this.olympicService.getTotalNumberOfMedalsByCountry(id).subscribe((data) => {
       this.numberOfMedals = data;
+    },
+    (error) => {
+      this.errorMessage = 'Error fetching medals data: ' + error.message;
     })
   }
 
-  getTotalNumberOfAthletesByCountry(id: number): any {
-    this.olympicService.getTotalNumberOfAthletesByCountry(id).subscribe((data: number) => {
+  /**
+   * Gets the total number of athletes by country
+   * @param id 
+   */
+  getTotalNumberOfAthletesByCountry(id: number): Subscription  {
+    return this.olympicService.getTotalNumberOfAthletesByCountry(id).subscribe((data: number) => {
       this.numberOfAthletes = data;
+    },
+    error => {
+      this.errorMessage = 'Error fetching athletes data: ' + error.message;
     })
   }
 
+  /**
+   * Redirect to home page
+   */
   onReturnToHomePage(): void {
     this.router.navigate(['/']);
   }

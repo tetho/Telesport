@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Color, ScaleType } from '@swimlane/ngx-charts';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subscription } from 'rxjs';
+import { MedalsByCountry } from 'src/app/core/models/MedalsByCountry';
 import { Country } from 'src/app/core/models/Olympic';
 import { OlympicService } from 'src/app/core/services/olympic.service';
 
@@ -10,11 +11,13 @@ import { OlympicService } from 'src/app/core/services/olympic.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   public olympics$: Observable<any> = of(null);
   countries: Country[] = [];
   numberOfCountries: number = 0;
-  medalsByCountryChartData: any[] = [];
+  medalsByCountryChartData: MedalsByCountry[] = [];
+  private subscriptions: Subscription = new Subscription();
+  errorMessage: string = '';
 
   view!: [number, number]; 
   showLegend: boolean = false;
@@ -34,17 +37,44 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.olympics$ = this.olympicService.getOlympics();
-    
-    this.olympicService.getNumberOfCountries().subscribe((countries: number) => {
-      this.numberOfCountries = countries;
-    });
 
-    this.olympicService.getMedalsByCountry().subscribe((data) => {
-      this.medalsByCountryChartData = data;
-    });
-    
+    this.subscriptions.add(this.getNumberOfCountries());
+
+    this.subscriptions.add(this.getMedalsByCountry());
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
+  /**
+   * Gets the number of countries
+   */
+  getNumberOfCountries(): Subscription {
+    return this.olympicService.getNumberOfCountries().subscribe((countries: number) => {
+      this.numberOfCountries = countries;
+    },
+    (error) => {
+      this.errorMessage = 'Error fetching number of countries: ' + error.message;
+    });
+  }
+
+  /**
+   * Gets the number of medals by country
+   */
+  getMedalsByCountry(): Subscription {
+    return this.olympicService.getMedalsByCountry().subscribe((data) => {
+      this.medalsByCountryChartData = data;
+    },
+    (error) => {
+      this.errorMessage = 'Error fetching medals by country: ' + error.message;
+    });
+  }
+
+  /**
+   * Select a country
+   * @param event 
+   */
   onSelect(event: any): void {
     const selectedCountry = this.medalsByCountryChartData.find(data => data.name === event.name);
     if (selectedCountry) {

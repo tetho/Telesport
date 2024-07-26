@@ -1,9 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { catchError, filter, map, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { catchError, filter, map, mergeMap, tap } from 'rxjs/operators';
 import { Country } from '../models/Olympic';
-import { Participation } from '../models/Participation';
+import { MedalsByCountry } from '../models/MedalsByCountry';
 
 @Injectable({
   providedIn: 'root',
@@ -28,61 +28,123 @@ export class OlympicService {
   }
 
   getOlympics() {
-    return this.olympics$.asObservable();
+    return this.olympics$.asObservable().pipe(
+      catchError(this.handleError)
+    );
   }
 
+  /**
+   * Gets the list of countries
+   * @returns 
+   */
   getCountries(): Observable<Country[]> {
-    return this.http.get<Country[]>(this.olympicUrl);
+    return this.http.get<Country[]>(this.olympicUrl).pipe(
+      catchError(this.handleError)
+    );
   }
 
+  /**
+   * Gets the number of countries
+   * @returns 
+   */
   getNumberOfCountries(): Observable<number> {
     return this.getCountries().pipe(
-      map(x => x.length)
+      map(countries => countries.length),
+      catchError(this.handleError)
     );
   }
 
-  getMedalsByCountry(): Observable<any[]> {
+  /**
+   * Gets the number of medals by country
+   * @returns 
+   */
+  getMedalsByCountry(): Observable<MedalsByCountry[]> {
     return this.getCountries().pipe(
       map(countries => {
-        return countries.map(x => ({
-          name: x.country,
-          value: x.participations.reduce((total, participation) => total += participation.medalsCount, 0),
-          id: x.id
+        return countries.map(country => ({
+          name: country.country,
+          value: country.participations.reduce((total, participation) => total += participation.medalsCount, 0),
+          id: country.id
         }));
-      })
+      }),
+      catchError(this.handleError)
     );
   }
 
+  /**
+   * Gets the details of a country
+   * @param countryId 
+   * @returns 
+   */
   getCountryById(countryId: number): Observable<Country> {
     return this.getCountries().pipe(
-      map(countries => countries.find(x => x.id === countryId)),
-      filter(country => !!country)
-    ) as Observable<Country>;
+      mergeMap(countries => {
+        const country = countries.find(country => country.id === countryId);
+        if (country) {
+          return of(country);
+        } else {
+          return throwError(() => new Error('Country not found'));
+        }
+      }),
+      catchError(this.handleError)
+    );
   }
 
+  /**
+   * Gets the total number of medals by country
+   * @param countryId 
+   * @returns 
+   */
   getTotalNumberOfMedalsByCountry(countryId: number): Observable<number> {
     return this.getCountries().pipe(
       map(countries => {
-        const country = countries.find(x => x.id === countryId);
+        const country = countries.find(country => country.id === countryId);
         if (country) {
           return country.participations.reduce((total, participation) => total + participation.medalsCount, 0);
         } else {
           return 0;
         }
-      })
+      }),
+      catchError(this.handleError)
     )
   }
 
-   getTotalNumberOfAthletesByCountry(countryId: number): Observable<number> {
+  /**
+   * Gets the total number of athletes by country
+   * @param countryId 
+   * @returns 
+   */
+  getTotalNumberOfAthletesByCountry(countryId: number): Observable<number> {
     return this.getCountries().pipe(
       map(countries => {
-        const country = countries.find(x => x.id === countryId);
+        const country = countries.find(country => country.id === countryId);
         if (country) {
           return country.participations.reduce((total, participation) => total + participation.athleteCount, 0);
         } else {
           return 0;
         }
-      })
+      }),
+      catchError(this.handleError)
     )
    }
+
+   /**
+    * Handles error
+    * @param error 
+    * @returns 
+    */
+   private handleError(error: HttpErrorResponse) {
+    let errorMessage = '';
+    if (error.error instanceof ErrorEvent) {
+      if (!navigator.onLine) {
+        errorMessage = 'No Internet Connection';
+      } else {
+        errorMessage = `An error occurred: ${error.error.message}`;
+      }
+    } else {
+      errorMessage = `Server returned code: ${error.status}, error message is: ${error.message}`;
+    }
+    console.error(errorMessage);
+    return throwError(() => new Error(errorMessage));
+  }
 }

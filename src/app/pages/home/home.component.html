@@ -1,4 +1,8 @@
-<div class="page-container">
+<div *ngIf="errorMessage" class="error">
+    <p>{{ errorMessage }}</p>
+</div>
+
+<div *ngIf="!errorMessage" class="page-container">
     <h2>Medals per Country</h2>
     <div class="flex-container">
         <div class="text-container">
